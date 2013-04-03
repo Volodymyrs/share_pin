@@ -1,0 +1,248 @@
+<?php
+
+/**
+ * Implementation of hook_access().
+ * @return
+ *   TRUE if the operation may be performed, FALSE otherwise.
+ */
+function share_pin_access() {
+  global $user;
+  $path = implode('/', arg());
+
+  if ($user->uid != FALSE) {
+    return TRUE;
+  }
+  if (user_is_anonymous()) {
+    switch ($path) {
+      case 'user/favorite/add':
+
+        return TRUE;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function share_pin_menu() {
+  $items = array();
+
+  $items['user/favorite/add'] = array(
+    'title' => t('Add to Favorites'),
+    'page callback' => 'share_pin_favorite_add',
+    'page arguments' => array('share_element'),
+    'access callback' => 'share_pin_access',
+    'access arguments' => array('create', 'share_element'),
+    //'theme callback' => 'share_pin_return_theme',
+    'type' => MENU_CALLBACK,
+    'file' => 'node.pages.inc',
+    'file path' => 'modules/node'
+  );
+
+  $items['user/favorite/%node/edit'] = array(
+    'title' => t('Edit favorite'),
+    'page callback' => 'node_page_edit',
+    'page arguments' => array(2),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 2),
+    'type' => MENU_CALLBACK,
+    'file' => 'node.pages.inc',
+    'file path' => 'modules/node'
+  );
+
+  $items['user/favorite/%/save'] = array(
+    'title' => t('Sending content to katmary'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('share_pin_sending_data_form', 2),
+    'access arguments' => array('share_pin_access'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/share_pin_sending_data.pages.inc',
+  );
+
+/*  $items['add/%ctools_js/_test_review'] = array(
+    'page callback'    => 'test_ctools_modal_review',
+    'page arguments'   => array(1),
+    'access arguments' => array('create review content'),
+  );*/
+
+  return $items;
+}
+
+
+/**
+ * Returns a node submission form.
+ */
+function share_pin_favorite_add($type) {
+  global $user;
+  if ($user->uid != FALSE && (user_access('access content'))) {
+    //get fields
+    $url = (!empty($_GET['url'])) ? check_url($_GET['url']) : '';
+    $image = (!empty($_GET['img_src'])) ? check_url($_GET['img_src']) : '';
+    $title = (!empty($_GET['win_title'])) ? check_url($_GET['win_title']) : '';
+
+    $types = node_type_get_types();
+    $node = (object) array(
+      'uid' => $user->uid,
+      'name' => (isset($user->name) ? $user->name : ''),
+      'type' => $type,
+      'language' => LANGUAGE_NONE
+    );
+    drupal_set_title(t('Create @name', array('@name' => $types[$type]->name)), PASS_THROUGH);
+    $lang = field_language('node', $node, 'field_tags');
+
+    //prepare image
+    if (!empty($image)) {
+      $filename = array_pop(explode('/', $image));
+      $image = file_get_contents($image);
+      $file = file_save_data($image, 'public://' . $filename, FILE_EXISTS_RENAME);
+      file_usage_add($file, 'custom_example', 'custom_example', $file->fid);
+    }
+    //set fields
+    $node->title = $title;
+    $node->status = 1;
+    $node->field_source[$lang][0]['value'] = (!empty($url)) ? $url : '';
+    $node->field_image[$lang][0]['fid'] = (!empty($file->fid)) ? $file->fid : '';
+
+    $output = drupal_get_form($type . '_node_form', $node);
+  }
+  else {
+    $output = drupal_get_form('user_login');
+  }
+
+  // print render($output);
+  return $output;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function share_pin_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+  //dsm($form);
+  $path = implode('/', arg());
+  if ($form_id == 'share_element_node_form') {
+    if (arg(1) == 'favorite' && !empty($form['#node']->type) && $form['#node']->type == 'share_element') {
+      drupal_add_css(drupal_get_path('module', 'share_pin') . '/css/share_pin.form.css');
+      drupal_set_title(t('Add to Favorites'));
+      $form['#theme'] = array('share_pin_form');
+      $node = $form['#node'];
+      $lang = field_language('node', $node, 'field_tags');
+
+      //add states for checkbox
+      $form['field_tags'][$lang]['#states'] = array(
+        'visible' => array(
+          ':input[name="field_interests[' . $lang . ']"]' => array('checked' => TRUE)
+        ),
+      );
+      unset($form['field_tags'][$lang]['#title'], $form['actions']['preview']);
+      $form['field_tags'][$lang]['#options']['_none'] = t('Please select the category of interests');
+
+      //set submit
+      $form['actions']['submit']['#submit'][] = 'share_pin_form_submit';
+      hide($form['additional_settings']);
+      //dsm($form);
+    }
+  }
+  if ($form_id == 'user_login') {
+    drupal_set_title(t('Login in'));
+    $form['#submit'][] = 'share_pin_user_login_form_submit';
+  }
+}
+
+/**
+ * Implementation of hook_node_submit()
+ */
+function share_pin_form_submit($form, &$form_state) {
+  //dsm($form_state);
+  if (arg(0) == 'user' && arg(1) == 'favorite' && arg(2) == 'add') {
+    $nid ='';
+    if(isset($form_state['nid'])){
+      $nid = $form_state['nid'];
+    }
+    $path = "user/favorite/{$nid}/save";
+    $_GET['destination'] = $path;
+  }
+}
+
+/**
+ * Implementation of hook_node_submit()
+ */
+function share_pin_user_login_form_submit($form, &$form_state) {
+  //set destination after login in
+  $path = $form['#action'];
+  $_GET['destination'] = $path;
+}
+
+/**
+ * Implementation of hook_block_info
+ */
+function share_pin_block_info() {
+  return array(
+    'share_pin_block' => array(
+      'info' => t('Share pin block'),
+      'status' => TRUE,
+      'region' => 'sidebar_first',
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_block_view
+ */
+function share_pin_block_view($delta = '') {
+  if ($delta == 'share_pin_block') {
+    return array(
+      'subject' => t('Share pin'),
+      'content' => array('#markup' => share_pin_block())
+    );
+  }
+}
+
+/**
+ * Return featured blogger block content.
+ */
+function share_pin_block() {
+  $output = '<a class="settings" name="Katmary Pin" title="Katmary Pin" onclick="alert(\'' . t('Please move it to the bookmarks bar') . '\'); return false;" href="javascript:void((function(){var e=document.createElement(\'script\');e.setAttribute(\'type\',\'text/javascript\');e.setAttribute(\'charset\',\'UTF-8\');e.setAttribute(\'src\',\'http://'.$_SERVER["SERVER_NAME"].'/'.drupal_get_path('module', 'share_pin').'/js/getjsforadd.js?r=\'+Math.random()*99999999);document.body.appendChild(e)})());">
+              <span class="pin-title-btn">Katmary Pin</span>
+             </a>';
+  return $output;
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function share_pin_theme($existing, $type, $theme, $path) {
+  return array(
+    'share_pin_form' => array(
+      'path' => drupal_get_path('module', 'share_pin') . '/templates',
+      'template' => 'share_pin_form',
+      'arguments' => array('form' => NULL),
+      'render element' => 'form',
+    ),
+  );
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function share_pin_preprocess(&$vars) {
+  if (arg(0) == 'user' && arg(1) == 'favorite' && (arg(2) == 'add'||arg(3) == 'save')) {
+    unset(
+    $vars['page']['header'],
+    $vars['page']['page_top'],
+    $vars['page']['#type']
+    );
+
+    $vars['logo'] = '';
+    $vars['site_name'] = '';
+    $vars['main_menu'] = '';
+    $vars['secondary_menu'] = '';
+    $vars['page']['sidebar_first'] = '';
+    $vars['page']['sidebar_second'] = '';
+    $vars['page']['footer'] = '';
+    $vars['tabs'] = '';
+     //dsm($vars);
+  }
+}
+
+

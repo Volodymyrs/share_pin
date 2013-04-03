@@ -1,0 +1,61 @@
+.form-add-favorites .form-textarea-wrapper .grippie,
+.form-add-favorites .form-textarea-wrapper textarea,
+.page-user-favorite-save #edit-save-massage{
+    width: 57%;
+}
+.form-add-favorites .add-interests{
+    margin-top: 20px;
+    height: 10px;
+}
+.form-add-favorites .image-widget-data a{
+    width: 105px;
+    display: inline-block;
+}
+.form-add-favorites .field-name-field-interests {
+    float: left;
+    margin-right: 10px;
+}
+.form-add-favorites .field-name-field-source {
+    clear: both;
+}
+.page-user-favorite-save #footer-wrapper,
+.page-user-favorite-add #footer-wrapper {
+    background: none
+}
+
+
+/* from katmary*/
+.pin_head {
+    width: 57%;
+    height: 57px;
+    margin-bottom: 10px;
+    background:url('../images/pinwin_bgr_blue.png');
+}
+.left {
+    float: left;
+}
+.right {
+    float: right;
+}
+.pointer{
+    cursor: pointer;
+}
+.pin_close_wrap {
+    width: 57px;
+    height: 57px;
+}
+.pin_close {
+    background: url('../images/pinwin2_btn_close.png');
+    background-repeat: no-repeat;
+    width: 15px;
+    height: 15px;
+    margin: 21px 22px;
+}
+.pin_head_separator {
+    width: 2px;
+    height: 57px;
+    background: url('../images/pinwin_separator_top.png');
+}
+.pin_close_wrap:hover {
+    background: url('../images/pinwin_bgr_hover.png');
+}
