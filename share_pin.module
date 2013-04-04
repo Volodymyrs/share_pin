@@ -60,13 +60,22 @@ function share_pin_menu() {
   );
 
   $items['user/new-favorite/add'] = array(
+    'title' => t('Add to Favorites'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('share_form_add'),
+    'access arguments' => array('node_access'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/share.form.inc',
+  );
+
+  /*$items['user/new-favorite/add'] = array(
     'title' => t('Sending content to katmary'),
     'page callback' => 'statuses_box_add',
     //'page arguments' => array('test_data_form'),
     'access arguments' => array('share_pin_access'),
     'type' => MENU_CALLBACK,
     //'file' => 'includes/test.pages.inc',
-  );
+  );*/
 
 /*  $items['add/%ctools_js/_test_review'] = array(
     'page callback'    => 'test_ctools_modal_review',
@@ -297,8 +306,7 @@ function statuses_box_add(){
     drupal_set_message('sid was update');
   }
  // $form = drupal_get_form('statuses_box_add_form', $recipient, $type);
-
-  //return $object;
-  return 'test';
+  print_r($status->sid); exit;
+  //return 'test';
 }
 

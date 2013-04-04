@@ -32,7 +32,7 @@
 		new_window_params : {
 			options : "status=no,resizable=0,personalbar=no,directories=no,location=no,toolbar=no,menubar=no,width=543,height=650,left=0,top=0",
 			//url : "http://katmary.net/user/favorite/add",
-			url : localhost_url+"/user/favorite/add",
+			url : localhost_url+"/user/new-favorite/add",
 			winName : "star"
 		},
 		firstSpanHTML : '<a href="'+localhost_url+'/">'+localhost_url+'/</a>',
