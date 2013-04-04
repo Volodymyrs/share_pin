@@ -8,7 +8,7 @@
 /**
  * callback for the favorite save.
  */
-function share_pin_sending_data_form($form, &$form_state, $nid) {
+function share_pin_sending_data_form($form, &$form_state, $uid) {
 
   drupal_add_css(drupal_get_path('module', 'share_pin') . '/css/share_pin.form.css');
   //add count
@@ -35,7 +35,7 @@ function share_pin_sending_data_form($form, &$form_state, $nid) {
     '#value' => t('View'),
     '#attributes' => array(
       'class' => array('btn_redirect'),
-      'onclick' => array('window.opener.location.href = "http://'.$_SERVER["SERVER_NAME"].'/node/'.$nid.'"; window.close(); return false;'),
+      'onclick' => array('window.opener.location.href = "http://'.$_SERVER["SERVER_NAME"].'/user/'.$uid.'"; window.close(); return false;'),
     ),
   );
 

@@ -5,9 +5,9 @@
   print render($form['form_token']);
   print render($form['form_build_id']);
   //
-  // echo '<pre>';
-  // print_r(array_keys($form));
-  // echo '</pre>';
+//   echo '<pre>';
+//   print_r(array_keys($form));
+//   echo '</pre>';
 
   ?>
   <div class="pin_head">
@@ -27,20 +27,20 @@
   </div>
 
   <div class="inline-body">
-    <?php print render($form['body']); ?>
+    <?php print render($form['description']); ?>
   </div>
 
 
   <div class="fields-summary">
     <div class="add-interests">
-      <?php print render($form['field_interests']); ?>
-      <?php print render($form['field_tags']); ?>
+      <?php print render($form['interests']); ?>
+      <?php print render($form['category']); ?>
     </div>
-    <?php print render($form['field_source']); ?>
-    <?php print render($form['field_image']); ?>
+    <?php print render($form['source']); ?>
+    <?php print render($form['image']); ?>
   </div>
 
   <div class="inline buttons">
-    <?php print render($form['actions']); ?>
+    <?php print render($form['submit']); ?>
   </div>
 </div>

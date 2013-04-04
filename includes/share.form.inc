@@ -8,18 +8,20 @@
 /**
  * callback for the favorite save.
  */
-/*function test_data_form(){
-  $context = statuses_determine_context();
-  $recipient = $context['handler']->find_recipient();
-  $type = $context['handler']->type();
-  $form = drupal_get_form('statuses_box', $recipient, $type);
-  return $form;
-}*/
+function share_page_add(){
+  global $user;
+  if ($user->uid != FALSE && (user_access('access content'))) {
+    $output = drupal_get_form('share_form_add');
+  }
+  else{
+    $output = drupal_get_form('user_login');
+  }
+  return $output;
+}
 
 
 function share_form_add($form, &$form_state) {
-    global $user;
-
+  global $user;
   $url = (!empty($_GET['url'])) ? check_url($_GET['url']) : '';
   $image = (!empty($_GET['img_src'])) ? check_url($_GET['img_src']) : '';
   $title = (!empty($_GET['win_title'])) ? check_plain($_GET['win_title']) : '';
@@ -50,11 +52,9 @@ function share_form_add($form, &$form_state) {
   );
 
   $form['description'] = array(
-    '#type' => 'text_format',
+    '#type' => 'textarea',
     '#title' => t('Description'),
-    //'#default_value' => $term->description,
-    //'#format' => $term->format,
-    '#weight' => 0,
+    '#default_value' => '',
   );
 
   $form['interests'] = array(
@@ -64,7 +64,7 @@ function share_form_add($form, &$form_state) {
 
   $form['category'] = array(
     '#type' => 'select',
-    '#title' => t('Selected'),
+    '#title' => '',
     '#options' => $category,
     '#default_value' => (!empty($category['selected'])) ? $file->fid : '',
     '#states' => array(
@@ -103,6 +103,8 @@ function share_form_add_validate($form, &$form_state) {}
 
 
 function share_form_add_submit($form, &$form_state) {
+  global $user;
+  //dsm($form_state);
   $values = array();
   $values = $form_state['values'];
 
@@ -112,25 +114,49 @@ function share_form_add_submit($form, &$form_state) {
     $recipient = $context['handler']->find_recipient();  //+
     $type = $context['handler']->type();                 //+
   }
+  $description = !empty($values['description']['value']) ? check_plain($values['description']['value']) : '';
 
   // set $message
   $message = '';
   $message  = check_plain($values['title']);
-  $message .=  check_plain($values['description']['value']);
+  $message .=  $description;
   $message .= 'Source:' . check_url($values['source']);
   $image = $values['image'];
   $ac_plugin = 'photo';
 
-  //set category
-  if(!empty($values['interests']) && !empty($values['category']) && $values['category'] != 'none'){
-
-  }
-
   if(!empty($recipient) && ($message || $image)){
     //drupal_write_record('statuses', $object);
     if(function_exists('fbsmp_save_status')){
-     $save_status = fbsmp_save_status($recipient, $type, $message, $ac_plugin, array('fid'=>"$image"), NULL, _fbsmp_get_fbss_alerts());
-      dsm($save_status);
+      $save_status = fbsmp_save_status($recipient, $type, $message, $ac_plugin, array('fid'=>"$image"), NULL, _fbsmp_get_fbss_alerts());
+    }
+    //todo need to set object
+    $fcid = db_insert('flag_content')
+      ->fields(array(
+        'fid' => 2,
+        'content_type' => 'statuses',
+        'content_id' => $save_status->sid,
+        'uid' => $user->uid,
+        'sid' => 0,
+        'timestamp' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
+  //set category
+  if(!empty($values['interests']) && !empty($values['category']) && $values['category'] != 'none'){
+    if($save_status){
+      // Update the count with the new value otherwise.
+      $fcat = db_insert('field_data_field_tags')
+        ->fields(array(
+          'entity_type' => 'share_element',
+          'bundle' => 'share_element',
+          'deleted' => 0,
+          'entity_id' => $save_status->sid,
+          'revision_id' => $save_status->sid,
+          'language' => LANGUAGE_NONE,
+          'delta' => 0,
+          'field_tags_tid' => $values['category'],
+        ))
+        ->execute();
     }
   }
 }

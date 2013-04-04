@@ -14,7 +14,7 @@ function share_pin_access() {
   }
   if (user_is_anonymous()) {
     switch ($path) {
-      case 'user/favorite/add':
+      case 'user/new-favorite/add':
 
         return TRUE;
     }
@@ -61,9 +61,9 @@ function share_pin_menu() {
 
   $items['user/new-favorite/add'] = array(
     'title' => t('Add to Favorites'),
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'share_page_add',
     'page arguments' => array('share_form_add'),
-    'access arguments' => array('node_access'),
+    'access callback' => 'share_pin_access',
     'type' => MENU_CALLBACK,
     'file' => 'includes/share.form.inc',
   );
@@ -137,28 +137,14 @@ function share_pin_favorite_add($type) {
 function share_pin_form_alter(&$form, &$form_state, $form_id) {
   global $user;
   //dsm($form);
-  $path = implode('/', arg());
-  if ($form_id == 'share_element_node_form') {
-    if (arg(1) == 'favorite' && !empty($form['#node']->type) && $form['#node']->type == 'share_element') {
+
+  if ($form_id == 'share_form_add') {
+    if (arg(1) == 'new-favorite' && arg(2) == 'add') {
       drupal_add_css(drupal_get_path('module', 'share_pin') . '/css/share_pin.form.css');
       drupal_set_title(t('Add to Favorites'));
       $form['#theme'] = array('share_pin_form');
-      $node = $form['#node'];
-      $lang = field_language('node', $node, 'field_tags');
-
-      //add states for checkbox
-      $form['field_tags'][$lang]['#states'] = array(
-        'visible' => array(
-          ':input[name="field_interests[' . $lang . ']"]' => array('checked' => TRUE)
-        ),
-      );
-      unset($form['field_tags'][$lang]['#title'], $form['actions']['preview']);
-      $form['field_tags'][$lang]['#options']['_none'] = t('Please select the category of interests');
-
       //set submit
-      $form['actions']['submit']['#submit'][] = 'share_pin_form_submit';
-      hide($form['additional_settings']);
-      //dsm($form);
+      $form['#submit'][] = 'share_pin_form_submit';
     }
   }
   if ($form_id == 'user_login') {
@@ -172,12 +158,9 @@ function share_pin_form_alter(&$form, &$form_state, $form_id) {
  */
 function share_pin_form_submit($form, &$form_state) {
   //dsm($form_state);
-  if (arg(0) == 'user' && arg(1) == 'favorite' && arg(2) == 'add') {
-    $nid ='';
-    if(isset($form_state['nid'])){
-      $nid = $form_state['nid'];
-    }
-    $path = "user/favorite/{$nid}/save";
+  global $user;
+  if (arg(0) == 'user' && arg(1) == 'new-favorite' && arg(2) == 'add') {
+    $path = "user/favorite/{$user->uid}/save";
     $_GET['destination'] = $path;
   }
 }
@@ -244,7 +227,7 @@ function share_pin_theme($existing, $type, $theme, $path) {
  * Implements hook_preprocess_page().
  */
 function share_pin_preprocess(&$vars) {
-  if (arg(0) == 'user' && arg(1) == 'favorite' && (arg(2) == 'add'||arg(3) == 'save')) {
+  if (arg(0) == 'user' && (arg(1) == 'favorite' || arg(1) == 'new-favorite') && (arg(2) == 'add'||arg(3) == 'save')) {
     unset(
     $vars['page']['header'],
     $vars['page']['page_top'],
@@ -259,7 +242,7 @@ function share_pin_preprocess(&$vars) {
     $vars['page']['sidebar_second'] = '';
     $vars['page']['footer'] = '';
     $vars['tabs'] = '';
-     //dsm($vars);
+    // dsm($vars);
   }
 }
 

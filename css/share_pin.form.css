@@ -11,11 +11,11 @@
     width: 105px;
     display: inline-block;
 }
-.form-add-favorites .field-name-field-interests {
+.form-add-favorites .form-item-interests {
     float: left;
     margin-right: 10px;
 }
-.form-add-favorites .field-name-field-source {
+.form-add-favorites .form-item-source {
     clear: both;
 }
 .page-user-favorite-save #footer-wrapper,
