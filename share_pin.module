@@ -27,7 +27,7 @@ function share_pin_access() {
 function share_pin_menu() {
   $items = array();
 
-  $items['user/favorite/add'] = array(
+/*  $items['user/favorite/add'] = array(
     'title' => t('Add to Favorites'),
     'page callback' => 'share_pin_favorite_add',
     'page arguments' => array('share_element'),
@@ -37,7 +37,7 @@ function share_pin_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'node.pages.inc',
     'file path' => 'modules/node'
-  );
+  );*/
 
   $items['user/favorite/%node/edit'] = array(
     'title' => t('Edit favorite'),
@@ -68,67 +68,7 @@ function share_pin_menu() {
     'file' => 'includes/share.form.inc',
   );
 
-  /*$items['user/new-favorite/add'] = array(
-    'title' => t('Sending content to katmary'),
-    'page callback' => 'statuses_box_add',
-    //'page arguments' => array('test_data_form'),
-    'access arguments' => array('share_pin_access'),
-    'type' => MENU_CALLBACK,
-    //'file' => 'includes/test.pages.inc',
-  );*/
-
-/*  $items['add/%ctools_js/_test_review'] = array(
-    'page callback'    => 'test_ctools_modal_review',
-    'page arguments'   => array(1),
-    'access arguments' => array('create review content'),
-  );*/
-
   return $items;
-}
-
-
-/**
- * Returns a node submission form.
- */
-function share_pin_favorite_add($type) {
-  global $user;
-  if ($user->uid != FALSE && (user_access('access content'))) {
-    //get fields
-    $url = (!empty($_GET['url'])) ? check_url($_GET['url']) : '';
-    $image = (!empty($_GET['img_src'])) ? check_url($_GET['img_src']) : '';
-    $title = (!empty($_GET['win_title'])) ? check_url($_GET['win_title']) : '';
-
-    $types = node_type_get_types();
-    $node = (object) array(
-      'uid' => $user->uid,
-      'name' => (isset($user->name) ? $user->name : ''),
-      'type' => $type,
-      'language' => LANGUAGE_NONE
-    );
-    drupal_set_title(t('Create @name', array('@name' => $types[$type]->name)), PASS_THROUGH);
-    $lang = field_language('node', $node, 'field_tags');
-
-    //prepare image
-    if (!empty($image)) {
-      $filename = array_pop(explode('/', $image));
-      $image = file_get_contents($image);
-      $file = file_save_data($image, 'public://' . $filename, FILE_EXISTS_RENAME);
-      file_usage_add($file, 'custom_example', 'custom_example', $file->fid);
-    }
-    //set fields
-    $node->title = $title;
-    $node->status = 1;
-    $node->field_source[$lang][0]['value'] = (!empty($url)) ? $url : '';
-    $node->field_image[$lang][0]['fid'] = (!empty($file->fid)) ? $file->fid : '';
-
-    $output = drupal_get_form($type . '_node_form', $node);
-  }
-  else {
-    $output = drupal_get_form('user_login');
-  }
-
-  // print render($output);
-  return $output;
 }
 
 /**
@@ -244,52 +184,5 @@ function share_pin_preprocess(&$vars) {
     $vars['tabs'] = '';
     // dsm($vars);
   }
-}
-
-
-function statuses_box_add(){
-  $context = statuses_determine_context();
-  $recipient = $context['handler']->find_recipient();  //+
-  $type = $context['handler']->type();                 //+
-  //$message = trim($message);  //$form_state; //text    //+
-  $message = 'testasdadasda';  //$form_state; //text    //+
-  $recipient_id = $context['handler']->recipient_id($recipient);
-  $time = REQUEST_TIME;
-
-  $sender = (empty($sender) ? $GLOBALS['user'] : $sender);
-
-
-  //$new_status_obj = statuses_save_status($recipient, $type, $new_status, $GLOBALS['user'], array('form_state' => $form_state));
-
-                 // statuses_save_status($recipient, $type, $message, $sender = NULL, $options = array());
-
-
-  // Pretend to have set a new status if the submitted status is exactly the same as the old one.
-  $status = _statuses_get_status_fast($sender->uid);
-  // The status object to be saved.
-  $object = (object) array(
-    'message' => $message,
-    'created' => $time,
-    'sender' => $sender->uid,
-    'recipient' => $recipient_id,
-    'type' => $type,
-    'private' => isset($options['form_state']['values']['private']) ? $options['form_state']['values']['private'] : 0,
-  );
-
-  if($object){
-    db_update('statuses')
-      ->fields(array(
-        'message' => $message,
-        'created' => $time,
-      ))
-      ->condition('sid', $status->sid)
-      ->execute();
-    $object->sid = $status->sid;
-    $edit = TRUE;
-    drupal_set_message('sid was update');
-  }
- // $form = drupal_get_form('statuses_box_add_form', $recipient, $type);
-  print_r($status->sid); exit;
-  //return 'test';
 }
 
