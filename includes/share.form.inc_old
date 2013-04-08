@@ -33,11 +33,9 @@ function share_form_add($form, &$form_state) {
   $image = (!empty($_GET['img_src'])) ? check_url($_GET['img_src']) : '';
   $title = (!empty($_GET['win_title'])) ? $_GET['win_title'] : '';
   //
-  print_r($_GET['win_title']);
   $encoding = mb_detect_encoding($title, array('UTF-8', 'Windows-1251', 'KOI8-R', 'ISO-8859-5'));
-  dsm($encoding);
   if($encoding != 'UTF-8'){
-    $title = iconv($encoding, 'UTF-8', $title);
+    $title = iconv($encoding, 'utf-8', $title);
   }
 
   //get category for interests

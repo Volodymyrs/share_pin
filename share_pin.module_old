@@ -15,8 +15,7 @@ function share_pin_access() {
   if (user_is_anonymous()) {
     switch ($path) {
       case 'user/new-favorite/add':
-        return TRUE;
-      case 'user/favorite/'.$user->uid.'/save':
+
         return TRUE;
     }
   }
@@ -55,7 +54,7 @@ function share_pin_menu() {
     'title' => t('Sending content to katmary'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('share_pin_sending_data_form', 2),
-    'access callback' => 'share_pin_access',
+    'access arguments' => array('share_pin_access'),
     'type' => MENU_CALLBACK,
     'file' => 'includes/share_pin_sending_data.pages.inc',
   );

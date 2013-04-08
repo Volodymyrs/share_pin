@@ -3,3 +3,5 @@ description = Create share elements
 core = 7.x
 package = Custom Star-Auction
 dependencies[] = taxonomy
+dependencies[] = statuses
+dependencies[] = fbsmp
