@@ -35,7 +35,7 @@ function share_pin_sending_data_form($form, &$form_state, $uid) {
     '#value' => t('View'),
     '#attributes' => array(
       'class' => array('btn_redirect'),
-      'onclick' => array('window.opener.location.href = "http://'.$_SERVER["SERVER_NAME"].'/user/'.$uid.'"; window.close(); return false;'),
+      'onclick' => array('window.opener.location.href = "http://'.$_SERVER["SERVER_NAME"].'/user/'.$uid.'/share-bookmarks"; window.close(); return false;'),
     ),
   );
 

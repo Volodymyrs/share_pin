@@ -33,9 +33,11 @@ function share_form_add($form, &$form_state) {
   $image = (!empty($_GET['img_src'])) ? check_url($_GET['img_src']) : '';
   $title = (!empty($_GET['win_title'])) ? $_GET['win_title'] : '';
   //
-  print_r($_GET['win_title']);
-  $encoding = mb_detect_encoding($title, array('UTF-8', 'Windows-1251', 'KOI8-R', 'ISO-8859-5'));
-  dsm($encoding);
+  //$str2 = convert_cyr_string($_GET['win_title'],"i","w");
+  //print_r($str2);
+
+  $encoding = detect_encoding($title);
+
   if($encoding != 'UTF-8'){
     $title = iconv($encoding, 'UTF-8', $title);
   }
@@ -113,6 +115,17 @@ function share_form_add($form, &$form_state) {
   return $form;
 }
 
+
+function detect_encoding($string) {
+  static $list = array('utf-8', 'windows-1251');
+
+  foreach ($list as $item) {
+    $sample = iconv($item, $item, $string);
+    if (md5($sample) == md5($string))
+      return $item;
+  }
+  return null;
+}
 /**
  * Implementation of share_form_add_validate().
  */
