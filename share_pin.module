@@ -1,22 +1,30 @@
 <?php
 
+
+//path for the form "Add to Favorite"
+define('PATH_FAVORITE_FORM', 'user/new-favorite/add');
+//path for the page "Add to Share"
+define('PATH_SHARE_FORM', 'user/share/');
+
 /**
  * Implementation of hook_access().
  * @return
  *   TRUE if the operation may be performed, FALSE otherwise.
  */
-function share_pin_access() {
+function share_pin_access($sid = NULL) {
   global $user;
-  $path = implode('/', arg());
+  $current_path = current_path();
 
   if ($user->uid != FALSE) {
     return TRUE;
   }
   if (user_is_anonymous()) {
-    switch ($path) {
-      case 'user/new-favorite/add':
+    switch ($current_path) {
+      case PATH_FAVORITE_FORM:
         return TRUE;
       case 'user/favorite/'.$user->uid.'/save':
+        return TRUE;
+      case PATH_SHARE_FORM.$sid:
         return TRUE;
     }
   }
@@ -69,6 +77,16 @@ function share_pin_menu() {
     'file' => 'includes/share.form.inc',
   );
 
+  $items['user/share/%'] = array(
+    'title' => t('Share'),
+    'page callback' => 'share_page_add',
+    'page arguments' => array('share_form_add', 2),
+    'access callback' => 'share_pin_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/share.form.inc',
+  );
+
   return $items;
 }
 
@@ -77,19 +95,28 @@ function share_pin_menu() {
  */
 function share_pin_form_alter(&$form, &$form_state, $form_id) {
   global $user;
-  //dsm($form_id);
+  $current_path = current_path();
+  $sid = arg(2);
+  //dsm($current_path);
 /*  if($form_id = 'statuses_box'){
     unset($form['fbsmp']['video_icon'], $form['fbsmp']['slideshare_icon']);
   }*/
 
   if ($form_id == 'share_form_add') {
-    if (arg(1) == 'new-favorite' && arg(2) == 'add') {
-      drupal_add_css(drupal_get_path('module', 'share_pin') . '/css/share_pin.form.css');
-      drupal_set_title(t('Add to Favorites'));
-      $form['#theme'] = array('share_pin_form');
+    drupal_set_title(t('Add to Favorites'));
+    drupal_add_css(drupal_get_path('module', 'share_pin') . '/css/share_pin.form.css');
+
+    if ($current_path == PATH_FAVORITE_FORM) {
       //set submit
       $form['#submit'][] = 'share_pin_form_submit';
+      $form['#theme'] = array('share_pin_form');
     }
+    if ($current_path == PATH_SHARE_FORM . $sid) {
+      //set submit
+//      $form['#submit'][] = 'share_pin_form_submit';
+//      $form['#theme'] = array('share_pin_form');
+    }
+
   }
   if ($form_id == 'user_login') {
     drupal_set_title(t('Login in'));
@@ -103,6 +130,7 @@ function share_pin_form_alter(&$form, &$form_state, $form_id) {
 function share_pin_form_submit($form, &$form_state) {
   //dsm($form_state);
   global $user;
+
   if (arg(0) == 'user' && arg(1) == 'new-favorite' && arg(2) == 'add') {
     $path = "user/favorite/{$user->uid}/save";
     $_GET['destination'] = $path;
